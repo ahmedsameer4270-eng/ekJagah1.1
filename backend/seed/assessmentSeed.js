@@ -821,8 +821,499 @@ const questionsData = [
             'To speed up CPU clock cycles',
             'To export global variables across projects'
         ],
+    },
+
+    // ==========================================
+    // JAVASCRIPT - HARD (5 Questions)
+    // ==========================================
+    {
+        skill_id: 'javascript',
+        level: 'hard',
+        topic: 'Event Loop & Microtasks',
+        question_text: 'In what order will "Promise.resolve().then()", "setTimeout(fn, 0)", and "queueMicrotask(fn)" execute relative to synchronous code in the modern JS Event Loop?',
+        options: [
+            'setTimeout -> Promise.then -> queueMicrotask',
+            'Synchronous code -> Microtasks (queueMicrotask, Promise.then) -> Macrotasks (setTimeout)',
+            'Macrotasks -> Microtasks -> Synchronous code',
+            'All execute concurrently via multithreading'
+        ],
         correct_option_index: 1,
-        explanation: 'Include guards ensure that the header file contents are parsed only once per translation unit, avoiding duplicate declarations.'
+        explanation: 'The JavaScript engine drains the microtask queue (which includes resolved Promise handlers and queueMicrotask) before picking the next task from the macrotask queue (such as setTimeout).'
+    },
+    {
+        skill_id: 'javascript',
+        level: 'hard',
+        topic: 'Prototypes & Memory',
+        question_text: 'What happens when property assignment occurs on an object whose prototype has a read-only property of the same name (writable: false) in strict mode?',
+        options: [
+            'It shadows the prototype property without error',
+            'It throws a TypeError in strict mode and prevents creation of the own property',
+            'It deletes the property from the prototype',
+            'It automatically sets writable: true'
+        ],
+        correct_option_index: 1,
+        explanation: 'In strict mode, assigning to a non-writable property on the prototype chain raises a TypeError and prevents shadowing.'
+    },
+    {
+        skill_id: 'javascript',
+        level: 'hard',
+        topic: 'Memory Management & WeakMap',
+        question_text: 'Why are keys in a WeakMap held weakly, and what are the valid key types?',
+        options: [
+            'Keys can be primitive numbers; they are held weakly to reduce CPU cache size',
+            'Keys must be non-primitive objects (or non-registered symbols); holding them weakly allows garbage collection when no other references exist',
+            'Keys must be strings only for rapid hashing',
+            'Keys can be anything; weak references prevent circular JSON serialization'
+        ],
+        correct_option_index: 1,
+        explanation: 'WeakMap keys must be objects (or registered symbols), allowing the garbage collector to reclaim key objects and values when references elsewhere are lost.'
+    },
+    {
+        skill_id: 'javascript',
+        level: 'hard',
+        topic: 'Proxy & Metaprogramming',
+        question_text: 'Which Proxy trap intercepts object property access and method invocation?',
+        options: ['get()', 'apply()', 'construct()', 'has()'],
+        correct_option_index: 0,
+        explanation: 'The get trap intercepts reading of properties (e.g. proxy.foo or proxy[foo]), including method access prior to invocation.'
+    },
+    {
+        skill_id: 'javascript',
+        level: 'hard',
+        topic: 'Generators & Iteration',
+        question_text: 'What is returned by invoking next() on a generator function that has executed a return statement with a value?',
+        options: [
+            '{ value: undefined, done: true }',
+            '{ value: returnedValue, done: true }',
+            'It throws an UnexpectedReturnError',
+            '{ value: returnedValue, done: false }'
+        ],
+        correct_option_index: 1,
+        explanation: 'When a generator encounters a return value, next() yields { value: returnedValue, done: true }, signaling termination.'
+    },
+
+    // ==========================================
+    // REACT - HARD (5 Questions)
+    // ==========================================
+    {
+        skill_id: 'react',
+        level: 'hard',
+        topic: 'Fiber Architecture & Reconciliation',
+        question_text: 'What is the primary architectural purpose of the React Fiber reconciler compared to the legacy stack reconciler?',
+        options: [
+            'To convert React components into web workers',
+            'To enable incremental rendering by breaking rendering work into interruptible units prioritizing high-priority user interactions',
+            'To replace JSX with direct HTML string templating',
+            'To force synchronous DOM mutations for performance'
+        ],
+        correct_option_index: 1,
+        explanation: 'React Fiber enables time-slicing and interruptible render phases, allowing high-priority events (e.g. typing or animations) to preempt long-running background rendering.'
+    },
+    {
+        skill_id: 'react',
+        level: 'hard',
+        topic: 'Concurrent Features & useTransition',
+        question_text: 'What distinguishes state updates wrapped in startTransition() from standard setState() calls in React 18+?',
+        options: [
+            'Transitions execute on a separate Node.js server thread',
+            'Transition updates are marked as non-urgent and can be interrupted by urgent updates like typing or clicking',
+            'Transitions bypass virtual DOM diffing entirely',
+            'Transitions force an immediate synchronous repaint'
+        ],
+        correct_option_index: 1,
+        explanation: 'startTransition lets you mark UI updates as transitions, keeping the user interface responsive during heavy state changes.'
+    },
+    {
+        skill_id: 'react',
+        level: 'hard',
+        topic: 'Hooks Internals & Memory',
+        question_text: 'Why do hooks rely on consistent invocation order across renders (the Rules of Hooks)?',
+        options: [
+            'React attaches hook state to a single linked list on the component Fiber node in call order',
+            'The browser JavaScript call stack requires alphabetical ordering',
+            'React compiles hooks into static CSS stylesheets',
+            'To prevent multi-threaded race conditions'
+        ],
+        correct_option_index: 0,
+        explanation: 'Hooks are represented as a singly linked list stored on the current Fiber; React correlates state between renders purely through invocation index.'
+    },
+    {
+        skill_id: 'react',
+        level: 'hard',
+        topic: 'Server Components & Streaming',
+        question_text: 'What is true regarding React Server Components (RSC) vs Client Components?',
+        options: [
+            'Server Components ship their component code bundle to the client browser',
+            'Server Components execute exclusively on the server, shipping zero JavaScript bundle to the client and streaming serialized virtual DOM format',
+            'Server Components can use useState and useEffect freely',
+            'Server Components cannot query databases directly'
+        ],
+        correct_option_index: 1,
+        explanation: 'Server Components never send their JavaScript dependencies to the client browser, drastically reducing client bundle sizes and enabling secure direct server data access.'
+    },
+    {
+        skill_id: 'react',
+        level: 'hard',
+        topic: 'Context & Re-render Optimization',
+        question_text: 'How can you prevent all consumer components from re-rendering when only a specific slice of a large Context value changes?',
+        options: [
+            'Wrap the entire Context.Provider in React.memo',
+            'Split the context into smaller scoped contexts or use a selector-based external store pattern (e.g. useSyncExternalStore)',
+            'Add async await inside the component render body',
+            'Disable strict mode in index.jsx'
+        ],
+        correct_option_index: 1,
+        explanation: 'Because React Context triggers re-renders on all useContext consumers when the provider value reference changes, splitting contexts or employing useSyncExternalStore with selectors avoids redundant renders.'
+    },
+
+    // ==========================================
+    // SQL - HARD (5 Questions)
+    // ==========================================
+    {
+        skill_id: 'sql',
+        level: 'hard',
+        topic: 'Window Functions & PARTITION BY',
+        question_text: 'What is the key difference between RANK() and DENSE_RANK() window functions when duplicate values occur?',
+        options: [
+            'RANK() skips ranks after ties (e.g. 1, 2, 2, 4); DENSE_RANK() does not skip ranks (e.g. 1, 2, 2, 3)',
+            'RANK() requires an ORDER BY clause while DENSE_RANK() does not',
+            'DENSE_RANK() only works with integer primary keys',
+            'RANK() partitions data across servers while DENSE_RANK() operates locally'
+        ],
+        correct_option_index: 0,
+        explanation: 'RANK produces gaps in ranking after ties (e.g., 1, 2, 2, 4), whereas DENSE_RANK assigns consecutive integers without gaps (1, 2, 2, 3).'
+    },
+    {
+        skill_id: 'sql',
+        level: 'hard',
+        topic: 'Transaction Isolation & Phantom Reads',
+        question_text: 'Which SQL transaction isolation level prevents dirty reads, non-repeatable reads, AND phantom reads completely?',
+        options: ['READ COMMITTED', 'REPEATABLE READ', 'SERIALIZABLE', 'READ UNCOMMITTED'],
+        correct_option_index: 2,
+        explanation: 'SERIALIZABLE is the highest isolation level, completely eliminating phantom reads by emulating sequential transaction execution.'
+    },
+    {
+        skill_id: 'sql',
+        level: 'hard',
+        topic: 'Query Optimization & Indexing',
+        question_text: 'When is a composite B-Tree index on columns (A, B, C) usable by the query planner?',
+        options: [
+            'Only when all three columns A, B, and C are present in the WHERE clause',
+            'For queries filtering on A, or (A, B), or (A, B, C) according to the leftmost prefix rule, but NOT for queries filtering on B and C alone',
+            'For any combination of columns in any order',
+            'Only for SELECT COUNT(*) queries'
+        ],
+        correct_option_index: 1,
+        explanation: 'B-Tree composite indexes follow the leftmost prefix rule: leading columns must be constrained for the index tree to be traversed efficiently.'
+    },
+    {
+        skill_id: 'sql',
+        level: 'hard',
+        topic: 'CTEs & Recursive Queries',
+        question_text: 'What are the two required UNION components in a standard recursive Common Table Expression (WITH RECURSIVE)?',
+        options: [
+            'An Anchor member and a Recursive member referencing the CTE name itself',
+            'A PRIMARY KEY and a FOREIGN KEY',
+            'A TRIGGER and an INDEX',
+            'A HAVING clause and an OFFSET clause'
+        ],
+        correct_option_index: 0,
+        explanation: 'Recursive CTEs require an initial anchor query UNIONed with a recursive query that references the CTE iteratively until an empty set is produced.'
+    },
+    {
+        skill_id: 'sql',
+        level: 'hard',
+        topic: 'EXPLAIN & Join Algorithms',
+        question_text: 'Which join algorithm is typically chosen by a database optimizer when joining two large, unsorted datasets without relevant indexes?',
+        options: ['Nested Loop Join', 'Hash Join', 'Single Row Lookup', 'Index Scan'],
+        correct_option_index: 1,
+        explanation: 'A Hash Join builds an in-memory hash table of the smaller relation and scans the larger relation to find matches in O(M + N) time.'
+    },
+
+    // ==========================================
+    // DSA - HARD (5 Questions)
+    // ==========================================
+    {
+        skill_id: 'dsa',
+        level: 'hard',
+        topic: 'Graph Algorithms & Shortest Path',
+        question_text: 'Why does Dijkstra’s algorithm fail or produce incorrect results on graphs with negative edge weights, and which algorithm should be used instead?',
+        options: [
+            'It assumes once a node is visited its shortest path is finalized (greedy choice); Bellman-Ford should be used for negative edges',
+            'It runs in O(N!) factorial time; use Breadth-First Search instead',
+            'It requires directed acyclic graphs only; use Floyd-Warshall instead',
+            'It can only handle weighted trees'
+        ],
+        correct_option_index: 0,
+        explanation: 'Dijkstra assumes paths never decrease in cost once settled; Bellman-Ford relaxes all edges |V|-1 times and can detect negative-weight cycles.'
+    },
+    {
+        skill_id: 'dsa',
+        level: 'hard',
+        topic: 'Dynamic Programming & Intervals',
+        question_text: 'What is the optimal time complexity to solve the Longest Increasing Subsequence (LIS) problem of size N using binary search patience sorting?',
+        options: ['O(N^2)', 'O(N log N)', 'O(N)', 'O(2^N)'],
+        correct_option_index: 1,
+        explanation: 'By maintaining an active tails array and performing binary search (bisect_left) for each element, LIS is solved in O(N log N) time.'
+    },
+    {
+        skill_id: 'dsa',
+        level: 'hard',
+        topic: 'Advanced Trees & Balanced BSTs',
+        question_text: 'What is the maximum number of rotations required to rebalance an AVL tree after a single node insertion vs deletion?',
+        options: [
+            'At most 2 rotations for insertion; up to O(log N) rotations propagating to the root for deletion',
+            'O(log N) for insertion; 1 for deletion',
+            'Zero rotations are needed for AVL trees',
+            'Exactly N rotations for both'
+        ],
+        correct_option_index: 0,
+        explanation: 'An AVL insertion requires at most 1 single or double rotation (2 rotations) to restore the balance factor, whereas deletion can require rebalancing along the entire O(log N) path to root.'
+    },
+    {
+        skill_id: 'dsa',
+        level: 'hard',
+        topic: 'String Matching & Automata',
+        question_text: 'What does the failure function (prefix table / pi array) in the Knuth-Morris-Pratt (KMP) string matching algorithm represent?',
+        options: [
+            'The hash sum of all characters in the pattern',
+            'The length of the longest proper prefix of the pattern that is also a proper suffix of the pattern up to that index',
+            'The count of vowels in the text',
+            'The number of matching anagrams'
+        ],
+        correct_option_index: 1,
+        explanation: 'The KMP pi array precomputes the longest proper prefix that matches a suffix, allowing the algorithm to bypass re-examining previously matched characters in O(M + N) time.'
+    },
+    {
+        skill_id: 'dsa',
+        level: 'hard',
+        topic: 'Disjoint Set Union & Path Compression',
+        question_text: 'What is the amortized time complexity per operation of a Disjoint Set Union (Union-Find) structure with both union by rank and path compression?',
+        options: ['O(log N)', 'O(α(N)) - inverse Ackermann function', 'O(N)', 'O(1) strictly worst-case'],
+        correct_option_index: 1,
+        explanation: 'Combining path compression and union by rank achieves an amortized per-operation complexity of O(α(N)), which is practically less than 5 for all realistic universe sizes.'
+    },
+
+    // ==========================================
+    // JAVA - HARD (5 Questions)
+    // ==========================================
+    {
+        skill_id: 'java',
+        level: 'hard',
+        topic: 'Memory Model & Volatile',
+        question_text: 'What memory visibility and ordering guarantees does the "volatile" keyword provide according to the Java Memory Model (JMM)?',
+        options: [
+            'It provides mutual exclusion locks like synchronized',
+            'It guarantees that writes are immediately visible to all threads (no thread-local caching) and creates a happens-before relationship preventing instruction reordering',
+            'It makes complex operations like count++ atomic',
+            'It moves the variable into off-heap memory'
+        ],
+        correct_option_index: 1,
+        explanation: 'volatile guarantees visibility of writes across threads and enforces memory barriers preventing instruction reordering, but does not provide mutual exclusion for compound operations.'
+    },
+    {
+        skill_id: 'java',
+        level: 'hard',
+        topic: 'Garbage Collection & Generations',
+        question_text: 'In the JVM G1 (Garbage-First) collector, how is the heap organized compared to traditional generation collectors?',
+        options: [
+            'A single continuous memory block without generational division',
+            'The heap is partitioned into a large set of equal-sized non-contiguous regions, dynamically assigned roles (Eden, Survivor, Old)',
+            'Memory is allocated entirely in operating system disk swap space',
+            'Only on-stack allocations are allowed'
+        ],
+        correct_option_index: 1,
+        explanation: 'G1 divides heap memory into thousands of equal regions and incrementally reclaims regions with the most garbage (garbage-first) to meet pause time goals.'
+    },
+    {
+        skill_id: 'java',
+        level: 'hard',
+        topic: 'Generics & Type Erasure',
+        question_text: 'What is the effect of Java type erasure on generic classes at runtime?',
+        options: [
+            'Type arguments are replaced by their bounds (or Object) and bridge methods are inserted as needed; generic type parameters do not exist in bytecode at runtime',
+            'Generic types are specialized into separate C++ style templates per primitive',
+            'Generics cannot be inspected by Reflection at all',
+            'It causes all collections to become thread-safe'
+        ],
+        correct_option_index: 0,
+        explanation: 'Java generics were designed for backward compatibility: the compiler erases type arguments to their bounding types (or Object) and adds casts, meaning List<String> and List<Integer> share the exact same class at runtime.'
+    },
+    {
+        skill_id: 'java',
+        level: 'hard',
+        topic: 'Concurrency & CompletableFuture',
+        question_text: 'What is the default Executor used by CompletableFuture.supplyAsync() when no custom thread pool is supplied?',
+        options: [
+            'Executors.newSingleThreadExecutor()',
+            'ForkJoinPool.commonPool()',
+            'A new thread spawned for each invocation without pooling',
+            'The main UI thread'
+        ],
+        correct_option_index: 1,
+        explanation: 'CompletableFuture defaults to ForkJoinPool.commonPool(), which employs a work-stealing algorithm with parallelism sized to CPU cores.'
+    },
+    {
+        skill_id: 'java',
+        level: 'hard',
+        topic: 'ClassLoader Hierarchy',
+        question_text: 'What principle governs the Java ClassLoader delegation model?',
+        options: [
+            'Child-first loading',
+            'Parent-delegation principle: a class loader delegates the request to its parent before attempting to locate and define the class itself',
+            'Peer-to-peer broadcast loading',
+            'Random selection among all active class loaders'
+        ],
+        correct_option_index: 1,
+        explanation: 'The parent-delegation model ensures security and core class integrity (e.g. preventing user code from overriding java.lang.Object).'
+    },
+
+    // ==========================================
+    // C++ - HARD (5 Questions)
+    // ==========================================
+    {
+        skill_id: 'cpp',
+        level: 'hard',
+        topic: 'Move Semantics & Perfect Forwarding',
+        question_text: 'What does std::forward<T>(arg) do that std::move(arg) does not?',
+        options: [
+            'std::forward unconditionally casts to an rvalue; std::move conditionally casts',
+            'std::forward preserves the original value category (lvalue or rvalue) of the argument based on template parameter T; std::move unconditionally casts to rvalue',
+            'std::forward allocates heap memory',
+            'std::forward is a compiler intrinsic that executes threads'
+        ],
+        correct_option_index: 1,
+        explanation: 'std::forward conditionally casts to an rvalue reference only if the original parameter was passed as an rvalue, enabling perfect forwarding in templates.'
+    },
+    {
+        skill_id: 'cpp',
+        level: 'hard',
+        topic: 'Templates & SFINAE',
+        question_text: 'What does SFINAE stand for in C++ template metaprogramming, and what is its effect?',
+        options: [
+            'Substitution Failure Is Not An Error: if substituting a deduced type fails during overload resolution, the compiler discards the candidate rather than halting with a compilation error',
+            'Stack Frame Initialization Not Allowed Explicitly',
+            'Static Function Inlining And Native Execution',
+            'Synchronous File I/O Notification And Execution'
+        ],
+        correct_option_index: 0,
+        explanation: 'SFINAE allows developers to selectively enable or disable function templates based on type traits (std::enable_if or C++20 concepts) without hard compilation failures.'
+    },
+    {
+        skill_id: 'cpp',
+        level: 'hard',
+        topic: 'Smart Pointers & Memory Management',
+        question_text: 'What problem occurs when two objects manage each other using std::shared_ptr, and how is it resolved?',
+        options: [
+            'A segmentation fault occurs on allocation; solved by using raw pointers',
+            'A cyclic reference prevents reference counts from ever reaching zero (memory leak); resolved by breaking the cycle with std::weak_ptr',
+            'It causes double-free errors on exit',
+            'It deadlocks the main thread'
+        ],
+        correct_option_index: 1,
+        explanation: 'Cyclic shared_ptr ownership keeps reference counts positive indefinitely, preventing destruction. std::weak_ptr observes an object without incrementing the strong reference count.'
+    },
+    {
+        skill_id: 'cpp',
+        level: 'hard',
+        topic: 'RAII & Virtual Destructors',
+        question_text: 'Why MUST a base class destructor be declared virtual when deleting a derived class object through a pointer to base?',
+        options: [
+            'To prevent compiler optimization passes',
+            'To ensure the derived class destructor is invoked dynamically; otherwise, undefined behavior and resource leaks occur',
+            'Because C++ requires all methods in a base class to be virtual',
+            'To allocate derived classes on the heap automatically'
+        ],
+        correct_option_index: 1,
+        explanation: 'Deleting a derived instance via a base pointer with a non-virtual destructor results in undefined behavior because the derived destructor is never invoked.'
+    },
+    {
+        skill_id: 'cpp',
+        level: 'hard',
+        topic: 'Memory Alignment & Cache Locality',
+        question_text: 'What is the purpose of alignas() and std::hardware_destructive_interference_size in high-performance C++?',
+        options: [
+            'To align data to CPU cache lines (typically 64 bytes) to prevent false sharing between concurrent threads',
+            'To compress memory on RAM chips',
+            'To enforce AES encryption of variables',
+            'To limit maximum stack depth'
+        ],
+        correct_option_index: 0,
+        explanation: 'Aligning variables to separate cache lines prevents false sharing, where multiple threads invalidating neighboring data in the same L1/L2 cache line degrade performance.'
+    },
+
+    // ==========================================
+    // C - HARD (5 Questions)
+    // ==========================================
+    {
+        skill_id: 'c',
+        level: 'hard',
+        topic: 'Function Pointers & Dynamic Dispatch',
+        question_text: 'How do you declare a pointer named "func_ptr" to a function taking an int and double and returning a char*?',
+        options: [
+            'char* func_ptr(int, double);',
+            'char* (*func_ptr)(int, double);',
+            'char* func_ptr*(int, double);',
+            '(*char) func_ptr(int, double);'
+        ],
+        correct_option_index: 1,
+        explanation: 'In C syntax, parentheses around (*func_ptr) bind the asterisk to the pointer identifier: char* (*func_ptr)(int, double);'
+    },
+    {
+        skill_id: 'c',
+        level: 'hard',
+        topic: 'Structure Padding & Alignment',
+        question_text: 'Why does sizeof(struct { char a; int b; char c; }) evaluate to 12 bytes instead of 6 on a 32/64-bit architecture with 4-byte int alignment?',
+        options: [
+            'Compilers inject memory leaks randomly',
+            'The compiler pads 3 bytes after each char so the int and the struct boundaries align with 4-byte word boundaries for CPU performance',
+            'char types always occupy 4 bytes in structs',
+            'The compiler adds an encrypted header to structs'
+        ],
+        correct_option_index: 1,
+        explanation: 'CPUs access memory faster when multi-byte words are aligned to multiples of their size; compilers insert padding bytes between fields to satisfy natural alignment requirements.'
+    },
+    {
+        skill_id: 'c',
+        level: 'hard',
+        topic: 'Volatile & Signal Handling',
+        question_text: 'Why must variables shared between an interrupt service routine (or POSIX signal handler) and the main thread be declared "volatile sig_atomic_t"?',
+        options: [
+            'To prevent the compiler from optimizing away reads/writes into registers and ensure atomic read/write access without partial state interrupts',
+            'To allocate the variable in network memory',
+            'To encrypt the variable against memory dumps',
+            'To prevent recursive signal delivery'
+        ],
+        correct_option_index: 0,
+        explanation: 'volatile prevents compiler register caching of the value across async interrupts, and sig_atomic_t guarantees the variable is read/written in a single atomic instruction.'
+    },
+    {
+        skill_id: 'c',
+        level: 'hard',
+        topic: 'Virtual Memory & mmap',
+        question_text: 'What are the benefits of using mmap() with MAP_SHARED instead of standard read()/write() syscalls for large file processing in C?',
+        options: [
+            'It maps file pages directly into the process virtual address space, avoiding user-kernel buffer copying and enabling zero-copy I/O',
+            'It compresses files on disk automatically',
+            'It deletes the file when the program exits',
+            'It forces CPU multithreading on disk access'
+        ],
+        correct_option_index: 0,
+        explanation: 'mmap maps files into virtual memory using page tables, eliminating context-switch and buffer copying overhead associated with read/write syscalls.'
+    },
+    {
+        skill_id: 'c',
+        level: 'hard',
+        topic: 'Endianness & Bitwise Manipulation',
+        question_text: 'How can you determine if a system is Little-Endian or Big-Endian in C at runtime?',
+        options: [
+            'Check if sizeof(int) == 4',
+            'Inspect the first byte of an integer: unsigned int x = 1; char *c = (char*)&x; if (*c == 1) it is Little-Endian',
+            'Check the compiler version via __GNUC__',
+            'Call malloc(1) and check the pointer address parity'
+        ],
+        correct_option_index: 1,
+        explanation: 'In Little-Endian architectures, the least significant byte is stored at the lowest memory address (*c == 1); in Big-Endian, the most significant byte is stored first (*c == 0).'
     }
 ];
 
@@ -846,13 +1337,15 @@ async function seedAssessmentData() {
         console.log(`✅ Seeded ${skillsData.length} assessment skills.`);
     }
 
-    // Check if questions exist
-    const questionsCheck = await db.query('SELECT COUNT(*) as count FROM assessment_questions');
-    const qCount = parseInt(questionsCheck.rows[0]?.count || 0, 10);
-
-    if (qCount === 0) {
-        console.log('🌱 Seeding assessment questions...');
-        for (const q of questionsData) {
+    // Ensure all questions exist (upsert missing questions)
+    console.log('🌱 Verifying assessment questions database...');
+    let addedCount = 0;
+    for (const q of questionsData) {
+        const existing = await db.query(
+            'SELECT id FROM assessment_questions WHERE skill_id = $1 AND level = $2 AND question_text = $3',
+            [q.skill_id, q.level, q.question_text]
+        );
+        if (existing.rows.length === 0) {
             const qId = uuidv4();
             await db.query(
                 `INSERT INTO assessment_questions (id, skill_id, level, topic, question_text, options, correct_option_index, explanation)
@@ -868,11 +1361,13 @@ async function seedAssessmentData() {
                     q.explanation
                 ]
             );
+            addedCount++;
         }
-        console.log(`✅ Seeded ${questionsData.length} assessment questions.`);
-    } else {
-        console.log(`Assessment questions already populated (${qCount} questions).`);
     }
+
+    const totalCheck = await db.query('SELECT COUNT(*) as count FROM assessment_questions');
+    const finalCount = parseInt(totalCheck.rows[0]?.count || 0, 10);
+    console.log(`✅ Assessment questions verified. Added ${addedCount} new questions. Total active in DB: ${finalCount}`);
 }
 
 module.exports = {

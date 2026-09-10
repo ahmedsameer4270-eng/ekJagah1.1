@@ -49,7 +49,7 @@ exports.getSkills = async (req, res) => {
 exports.getQuestions = async (req, res) => {
     try {
         const { skillId } = req.params;
-        const level = (req.query.level || 'basic').toLowerCase();
+        const normalizedLevel = String(req.query.level || 'basic').trim().toLowerCase();
 
         // Verify skill exists
         const skillCheck = await db.query('SELECT * FROM assessment_skills WHERE id = $1', [skillId]);
@@ -58,17 +58,28 @@ exports.getQuestions = async (req, res) => {
         }
         const skill = skillCheck.rows[0];
 
-        // Fetch questions without answer key
-        const qResult = await db.query(
+        // Fetch questions matching skill and level (case-insensitive)
+        let qResult = await db.query(
             `SELECT id, skill_id, level, topic, question_text, options 
              FROM assessment_questions 
-             WHERE skill_id = $1 AND level = $2`,
-            [skillId, level]
+             WHERE skill_id = $1 AND LOWER(level) = $2`,
+            [skillId, normalizedLevel]
         );
+
+        // Fallback: If specific tier has no dedicated questions, fall back to any questions for this skill
+        if (qResult.rows.length === 0) {
+            console.warn(`No '${normalizedLevel}' questions found for ${skillId}. Falling back to available questions.`);
+            qResult = await db.query(
+                `SELECT id, skill_id, level, topic, question_text, options 
+                 FROM assessment_questions 
+                 WHERE skill_id = $1`,
+                [skillId]
+            );
+        }
 
         if (qResult.rows.length === 0) {
             return res.status(404).json({ 
-                error: `No questions found for ${skill.name} at '${level}' level.` 
+                error: `No questions found for ${skill.name}.` 
             });
         }
 
@@ -92,7 +103,7 @@ exports.getQuestions = async (req, res) => {
                 timeLimitMinutes: skill.time_limit_minutes,
                 questionCount: shuffled.length
             },
-            level,
+            level: normalizedLevel,
             questions: shuffled
         });
     } catch (err) {
