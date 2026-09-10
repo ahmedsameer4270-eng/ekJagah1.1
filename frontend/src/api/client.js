@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { FALLBACK_SKILLS, FALLBACK_QUESTIONS } from './assessmentFallbackData';
 
 const getBaseUrl = () => {
   if (import.meta.env.VITE_API_BASE_URL) {
@@ -258,6 +259,164 @@ api.interceptors.response.use(
 
       if (url.includes('/notifications')) {
         return Promise.resolve({ data: { notifications: [] } });
+      }
+
+      // Assessment: Skills list
+      if (url.includes('/assessment/skills')) {
+        return Promise.resolve({ data: { skills: FALLBACK_SKILLS } });
+      }
+
+      // Assessment: History
+      if (url.includes('/assessment/history')) {
+        const history = JSON.parse(localStorage.getItem('sb_assessment_history') || '[]');
+        return Promise.resolve({ data: { history } });
+      }
+
+      // Assessment: Questions for skill and level (including Hard)
+      if (url.match(/\/assessment\/([a-zA-Z0-9_-]+)\/questions/)) {
+        const match = url.match(/\/assessment\/([a-zA-Z0-9_-]+)\/questions/);
+        const skillId = match ? match[1] : 'javascript';
+        const urlObj = new URL(url.startsWith('http') ? url : `http://localhost${url}`);
+        const reqLevel = (urlObj.searchParams.get('level') || 'basic').toLowerCase();
+        const skill = FALLBACK_SKILLS.find((s) => s.id === skillId) || { id: skillId, name: skillId, time_limit_minutes: 15 };
+
+        let pool = FALLBACK_QUESTIONS.filter(
+          (q) => q.skill_id === skillId && q.level.toLowerCase() === reqLevel
+        );
+        if (pool.length === 0) {
+          pool = FALLBACK_QUESTIONS.filter((q) => q.skill_id === skillId);
+        }
+
+        const safeQuestions = pool.map((q, idx) => ({
+          id: q.id || `${skillId}-${q.level}-${idx}`,
+          skill_id: q.skill_id,
+          level: q.level,
+          topic: q.topic,
+          question_text: q.question_text,
+          options: q.options
+        }));
+
+        return Promise.resolve({
+          data: {
+            skill: {
+              id: skill.id,
+              name: skill.name,
+              category: skill.category,
+              timeLimitMinutes: skill.time_limit_minutes || 15,
+              questionCount: safeQuestions.length
+            },
+            level: reqLevel,
+            questions: safeQuestions
+          }
+        });
+      }
+
+      // Assessment: Submit test answers
+      if (url.match(/\/assessment\/([a-zA-Z0-9_-]+)\/submit/)) {
+        const match = url.match(/\/assessment\/([a-zA-Z0-9_-]+)\/submit/);
+        const skillId = match ? match[1] : 'javascript';
+        const payload = typeof originalRequest.data === 'string' ? JSON.parse(originalRequest.data) : (originalRequest.data || {});
+        const reqLevel = (payload.level || 'basic').toLowerCase();
+        const skill = FALLBACK_SKILLS.find((s) => s.id === skillId) || { id: skillId, name: skillId };
+
+        let pool = FALLBACK_QUESTIONS.filter(
+          (q) => q.skill_id === skillId && q.level.toLowerCase() === reqLevel
+        );
+        if (pool.length === 0) pool = FALLBACK_QUESTIONS.filter((q) => q.skill_id === skillId);
+
+        let correct = 0;
+        const review = pool.map((q, idx) => {
+          const qId = q.id || `${skillId}-${q.level}-${idx}`;
+          const userAns = payload.answers?.find((a) => a.questionId === qId || a.questionId === q.topic)?.selectedOption;
+          const isCorrect = userAns === q.correct_option_index;
+          if (isCorrect) correct++;
+          return {
+            id: qId,
+            skill_id: q.skill_id,
+            level: q.level,
+            topic: q.topic,
+            question_text: q.question_text,
+            options: q.options,
+            correct_option_index: q.correct_option_index,
+            user_answer: userAns,
+            is_correct: isCorrect,
+            explanation: q.explanation
+          };
+        });
+
+        const total = pool.length || 1;
+        const percentage = Math.round((correct / total) * 100);
+        const verdict = percentage >= 70 ? 'Competent' : (percentage >= 40 ? 'Developing' : 'Novice');
+        const passed = percentage >= 70;
+        const attemptId = 'att-' + Date.now();
+
+        const attemptRecord = {
+          id: attemptId,
+          skill_id: skillId,
+          skill_name: skill.name,
+          level: reqLevel,
+          score: correct,
+          total_questions: total,
+          percentage,
+          verdict,
+          passed,
+          time_spent_seconds: payload.timeTakenSeconds || 120,
+          tab_switches: payload.tabSwitches || 0,
+          completed_at: new Date().toISOString(),
+          reviewQuestions: review
+        };
+
+        const existingHist = JSON.parse(localStorage.getItem('sb_assessment_history') || '[]');
+        existingHist.unshift(attemptRecord);
+        localStorage.setItem('sb_assessment_history', JSON.stringify(existingHist));
+
+        // Update verified skills in user profile if passed
+        if (passed) {
+          const storedUser = getStoredUser();
+          if (storedUser) {
+            if (!storedUser.profile) storedUser.profile = {};
+            if (!Array.isArray(storedUser.profile.verified_skills)) storedUser.profile.verified_skills = [];
+            const idx = storedUser.profile.verified_skills.findIndex((s) => s.skillId === skillId);
+            const verifiedEntry = {
+              skillId,
+              skillName: skill.name,
+              level: reqLevel,
+              score: correct,
+              totalQuestions: total,
+              percentage,
+              verdict,
+              verifiedAt: new Date().toISOString()
+            };
+            if (idx >= 0) {
+              storedUser.profile.verified_skills[idx] = verifiedEntry;
+            } else {
+              storedUser.profile.verified_skills.push(verifiedEntry);
+            }
+            localStorage.setItem('sb_user', JSON.stringify(storedUser));
+          }
+        }
+
+        return Promise.resolve({
+          data: {
+            success: true,
+            attemptId,
+            score: correct,
+            totalQuestions: total,
+            percentage,
+            verdict,
+            passed,
+            message: `Assessment submitted successfully. Verdict: ${verdict}`
+          }
+        });
+      }
+
+      // Assessment: Fetch results for review
+      if (url.match(/\/assessment\/([a-zA-Z0-9_-]+)\/results\/([a-zA-Z0-9_-]+)/)) {
+        const match = url.match(/\/assessment\/([a-zA-Z0-9_-]+)\/results\/([a-zA-Z0-9_-]+)/);
+        const attemptId = match ? match[2] : null;
+        const history = JSON.parse(localStorage.getItem('sb_assessment_history') || '[]');
+        const attempt = history.find((h) => h.id === attemptId) || history[0] || null;
+        return Promise.resolve({ data: { attempt } });
       }
     }
 
