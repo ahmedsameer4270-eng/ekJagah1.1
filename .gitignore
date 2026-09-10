@@ -11,26 +11,29 @@ dist-ssr/
 build/
 frontend/dist/
 
-# Environment files & secrets (DO NOT COMMIT)
-.env
-.env.local
-.env.*.local
-.env.development
-.env.test
-.env.production
-backend/.env
-frontend/.env
+# All Environment files (NEVER commit any .env file to GitHub)
+.env*
+**/.env*
 
-# Database & SQLite files
+# Database & SQLite files (Clean production repo)
+*.db
 *.db-shm
 *.db-wal
+*.sqlite
+*.sqlite3
 
-# Uploads & user generated files
+# Uploads & user generated files (Resumes, certificates, uploads)
+uploads/
 backend/uploads/*
 !backend/uploads/.gitkeep
 
+# Scratch, test & debug scripts
+scratch/
+test-*.js
+
 # System & editor files
 .DS_Store
+**/.DS_Store
 Thumbs.db
 .idea/
 .vscode/*
