@@ -261,6 +261,207 @@ api.interceptors.response.use(
         return Promise.resolve({ data: { notifications: [] } });
       }
 
+      // Certificates (Student & Public verification)
+      if (url.includes('/certificates')) {
+        const defaultCerts = [
+          {
+            id: 'cert-python-101',
+            title: 'Certified Python Core Specialist',
+            issuer: 'EkJagah Skill Authority',
+            issue_date: '2026-02-15',
+            status: 'VERIFIED',
+            verification_hash: '0x8f3c7e92b0a1d48c',
+            skills: ['Python', 'Data Structures']
+          },
+          {
+            id: 'cert-react-202',
+            title: 'Modern React & Component Engineering',
+            issuer: 'Global Web Standards Institute',
+            issue_date: '2026-03-01',
+            status: 'VERIFIED',
+            verification_hash: '0x4d1b82a39f6e7c10',
+            skills: ['React.js', 'State Management']
+          }
+        ];
+        const certList = JSON.parse(localStorage.getItem('sb_certificates') || JSON.stringify(defaultCerts));
+        if (method === 'post') {
+          const newCert = {
+            id: 'cert-' + Date.now(),
+            title: originalRequest.data?.get ? originalRequest.data.get('title') : 'New Certificate',
+            issuer: originalRequest.data?.get ? originalRequest.data.get('issuer') : 'Institution',
+            issue_date: new Date().toISOString().split('T')[0],
+            status: 'PENDING_APPROVAL',
+            verification_hash: '0x' + Math.random().toString(16).substring(2, 10)
+          };
+          certList.unshift(newCert);
+          localStorage.setItem('sb_certificates', JSON.stringify(certList));
+          return Promise.resolve({ data: { message: 'Certificate uploaded successfully', certificate: newCert } });
+        }
+        return Promise.resolve({ data: { certificates: certList } });
+      }
+
+      // Company Portal
+      if (url.includes('/company/profile')) {
+        const compProf = {
+          id: 'comp-1',
+          name: 'Tech Innovations Lab',
+          industry: 'Software & Cloud Engineering',
+          location: 'Bengaluru, Karnataka',
+          website: 'https://techinnovations.io',
+          verification_status: 'VERIFIED',
+          trust_score: 96,
+          about: 'Leading enterprise software engineering and AI cloud systems provider.',
+          jobs_posted: 4,
+          active_hires: 12
+        };
+        const stats = {
+          activeJobs: 4,
+          totalApplicants: 18,
+          shortlisted: 5,
+          interviewsScheduled: 2
+        };
+        return Promise.resolve({ data: { profile: compProf, stats } });
+      }
+
+      if (url.includes('/company/jobs')) {
+        const compJobs = [
+          {
+            id: 'job-1',
+            title: 'Junior Full Stack Engineer',
+            department: 'Core Engineering',
+            location: 'Bengaluru (Hybrid)',
+            job_type: 'Full-time',
+            salary_range: '₹8,00,000 - ₹12,00,000',
+            applicants_count: 14,
+            status: 'ACTIVE',
+            created_at: '2026-08-15'
+          },
+          {
+            id: 'job-2',
+            title: 'Frontend React Developer Intern',
+            department: 'Product Experience',
+            location: 'Remote',
+            job_type: 'Internship',
+            salary_range: '₹35,000 / month',
+            applicants_count: 22,
+            status: 'ACTIVE',
+            created_at: '2026-08-20'
+          }
+        ];
+        if (method === 'post') {
+          return Promise.resolve({ data: { message: 'Job posted successfully', job: { id: 'job-' + Date.now(), ...originalRequest.data } } });
+        }
+        return Promise.resolve({ data: { jobs: compJobs } });
+      }
+
+      if (url.match(/\/company\/jobs\/([^/]+)\/applicants/)) {
+        return Promise.resolve({
+          data: {
+            applicants: [
+              {
+                id: 'app-1',
+                candidate_name: 'Aarav Sharma',
+                email: 'student@skillbridge.edu',
+                college: 'Indian Institute of Information Technology',
+                match_percentage: 94,
+                status: 'APPLIED',
+                applied_at: '2026-09-01',
+                resume_url: '/student/resume'
+              },
+              {
+                id: 'app-2',
+                candidate_name: 'Priya Verma',
+                email: 'priya.v@university.ac.in',
+                college: 'National Institute of Technology',
+                match_percentage: 88,
+                status: 'SHORTLISTED',
+                applied_at: '2026-09-03',
+                resume_url: '/student/resume'
+              }
+            ]
+          }
+        });
+      }
+
+      // Academician Portal
+      if (url.includes('/academician/trends')) {
+        return Promise.resolve({
+          data: {
+            studentCohortSize: 1420,
+            topSkills: [
+              { skill: 'React.js', demandScore: 94, growth: '+28%' },
+              { skill: 'Python', demandScore: 92, growth: '+35%' },
+              { skill: 'SQL & Database Architecture', demandScore: 89, growth: '+15%' },
+              { skill: 'Cloud & Docker', demandScore: 86, growth: '+42%' }
+            ],
+            emergingTech: [
+              { tech: 'Agentic AI & LLM Systems', growth: '+180%' },
+              { tech: 'Vector Databases', growth: '+120%' },
+              { tech: 'Rust Systems Programming', growth: '+75%' }
+            ],
+            curriculumAlignmentScore: 84
+          }
+        });
+      }
+
+      if (url.includes('/academician/curriculum-gap')) {
+        return Promise.resolve({
+          data: {
+            overallAlignment: 82,
+            gapCategories: [
+              { subject: 'Distributed Systems', industryExpectation: 'High', curriculumCoverage: 'Medium', recommendation: 'Introduce Kafka & Microservices labs' },
+              { subject: 'Containerization & DevOps', industryExpectation: 'High', curriculumCoverage: 'Low', recommendation: 'Add mandatory Docker & CI/CD module' }
+            ]
+          }
+        });
+      }
+
+      // Admin Portal
+      if (url.includes('/admin/stats')) {
+        return Promise.resolve({
+          data: {
+            users: { total: 13, students: 9, companies: 2, academicians: 1, admins: 1 },
+            companies: { verified: 2, pending: 1 },
+            certificates: { verified: 6, pending: 2 },
+            jobs: { active: 4, closed: 0 },
+            applications: 14
+          }
+        });
+      }
+
+      if (url.includes('/admin/companies')) {
+        return Promise.resolve({
+          data: {
+            companies: [
+              { id: 'comp-p1', name: 'Innovate AI Cloud', registration_number: 'CIN-U72200KA2024PTC184', status: 'PENDING', submitted_at: '2026-09-08' }
+            ]
+          }
+        });
+      }
+
+      if (url.includes('/admin/certificates')) {
+        return Promise.resolve({
+          data: {
+            certificates: [
+              { id: 'cert-p1', student_name: 'Harsh Vardhan', title: 'Advanced Cloud Architecture', issuer: 'AWS Training Partner', submitted_at: '2026-09-09' }
+            ]
+          }
+        });
+      }
+
+      if (url.includes('/admin/users')) {
+        return Promise.resolve({
+          data: {
+            users: [
+              { id: 'u-1', email: 'student@skillbridge.edu', role: 'Student', is_verified: 1, created_at: '2026-08-01' },
+              { id: 'u-2', email: 'recruiter@techcorp.com', role: 'Company', is_verified: 1, created_at: '2026-08-02' },
+              { id: 'u-3', email: 'prof.gupta@iitb.ac.in', role: 'Academician', is_verified: 1, created_at: '2026-08-03' },
+              { id: 'u-4', email: 'admin@skillbridge.gov.in', role: 'Admin', is_verified: 1, created_at: '2026-08-01' }
+            ]
+          }
+        });
+      }
+
       // Assessment: Skills list
       if (url.includes('/assessment/skills')) {
         return Promise.resolve({ data: { skills: FALLBACK_SKILLS } });
