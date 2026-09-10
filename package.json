@@ -1,0 +1,13 @@
+{
+  "name": "ekjagah-workspace",
+  "version": "1.0.0",
+  "description": "EkJagah — Your Career, All in One Place. AI-Powered Career Ecosystem Connecting Students, Companies, and Academicians",
+  "scripts": {
+    "dev:backend": "node backend/server.js",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build:frontend": "npm run build --prefix frontend",
+    "seed": "node backend/seed/seedData.js"
+  },
+  "author": "EkJagah Team",
+  "license": "MIT"
+}
