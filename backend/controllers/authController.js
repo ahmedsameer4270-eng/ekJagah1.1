@@ -26,7 +26,7 @@ function generateTokens(user, rememberMe = false) {
     const accessToken = jwt.sign(
         { userId: user.id, email: user.email, role: user.role },
         JWT_SECRET,
-        { expiresIn: '15m' }
+        { expiresIn: '7d' }
     );
 
     const refreshExpiry = rememberMe ? '30d' : '7d';
@@ -39,26 +39,48 @@ function generateTokens(user, rememberMe = false) {
     return { accessToken, refreshToken };
 }
 
-// Helper to fetch role profile
+// Helper to fetch role profile with safe JSON parsing
 async function fetchUserProfile(userId, role) {
-    if (role === 'Student') {
-        const res = await db.query('SELECT * FROM student_profiles WHERE user_id = $1', [userId]);
-        if (res.rows.length > 0) {
-            const profile = res.rows[0];
-            profile.technical_skills = JSON.parse(profile.technical_skills || '[]');
-            profile.soft_skills = JSON.parse(profile.soft_skills || '[]');
-            return profile;
+    try {
+        const safeParse = (val, fallback = []) => {
+            if (!val) return fallback;
+            if (typeof val === 'object') return val;
+            try { return JSON.parse(val); } catch { return fallback; }
+        };
+
+        if (role === 'Student') {
+            const res = await db.query('SELECT * FROM student_profiles WHERE user_id = $1', [userId]);
+            if (res.rows.length > 0) {
+                const profile = res.rows[0];
+                profile.technical_skills = safeParse(profile.technical_skills, []);
+                profile.soft_skills = safeParse(profile.soft_skills, []);
+                profile.skill_preferences = safeParse(profile.skill_preferences, []);
+                profile.projects = safeParse(profile.projects, []);
+                profile.experience = safeParse(profile.experience, []);
+                profile.verified_skills = safeParse(profile.verified_skills, []);
+                return profile;
+            } else {
+                await db.query(
+                    `INSERT INTO student_profiles (user_id, full_name, college, branch, profile_completion)
+                     VALUES ($1, 'Student', '', '', 30)`,
+                    [userId]
+                );
+                const newRes = await db.query('SELECT * FROM student_profiles WHERE user_id = $1', [userId]);
+                return newRes.rows[0] || null;
+            }
+        } else if (role === 'Company') {
+            const res = await db.query('SELECT * FROM company_profiles WHERE user_id = $1', [userId]);
+            return res.rows[0] || null;
+        } else if (role === 'Academician') {
+            const res = await db.query('SELECT * FROM academician_profiles WHERE user_id = $1', [userId]);
+            if (res.rows.length > 0) {
+                const profile = res.rows[0];
+                profile.research_areas = safeParse(profile.research_areas, []);
+                return profile;
+            }
         }
-    } else if (role === 'Company') {
-        const res = await db.query('SELECT * FROM company_profiles WHERE user_id = $1', [userId]);
-        return res.rows[0] || null;
-    } else if (role === 'Academician') {
-        const res = await db.query('SELECT * FROM academician_profiles WHERE user_id = $1', [userId]);
-        if (res.rows.length > 0) {
-            const profile = res.rows[0];
-            profile.research_areas = JSON.parse(profile.research_areas || '[]');
-            return profile;
-        }
+    } catch (err) {
+        console.error('Error fetching user profile:', err);
     }
     return null;
 }
@@ -72,7 +94,9 @@ async function register(req, res) {
             return res.status(400).json({ error: 'Email, password, and role are required.' });
         }
 
-        if (!validateEmail(email)) {
+        const cleanEmail = String(email).trim().toLowerCase();
+
+        if (!validateEmail(cleanEmail)) {
             return res.status(400).json({ error: 'Invalid email address format.' });
         }
 
@@ -89,7 +113,7 @@ async function register(req, res) {
         }
 
         // Check if user already exists
-        const existing = await db.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
+        const existing = await db.query('SELECT id FROM users WHERE email = $1', [cleanEmail]);
         if (existing.rows.length > 0) {
             return res.status(409).json({ error: 'An account with this email already exists.' });
         }
@@ -101,8 +125,8 @@ async function register(req, res) {
 
         await db.query(
             `INSERT INTO users (id, email, password_hash, role, is_verified, verification_token)
-             VALUES ($1, $2, $3, $4, 0, $5)`,
-            [userId, email.toLowerCase(), passwordHash, role, verificationToken]
+             VALUES ($1, $2, $3, $4, 1, $5)`,
+            [userId, cleanEmail, passwordHash, role, verificationToken]
         );
 
         // Populate role-specific profile
@@ -133,16 +157,16 @@ async function register(req, res) {
         await db.query(
             `INSERT INTO notifications (id, user_id, title, message, type)
              VALUES ($1, $2, $3, $4, 'info')`,
-            [uuidv4(), userId, 'Welcome to EkJagah!', `Your ${role} account has been created. Please verify your email to unlock all features.`, 'info']
+            [uuidv4(), userId, 'Welcome to EkJagah!', `Your ${role} account has been created.`, 'info']
         );
 
-        await sendVerificationEmail(email.toLowerCase(), verificationToken, role);
+        await sendVerificationEmail(cleanEmail, verificationToken, role);
 
         return res.status(201).json({
-            message: 'Registration successful. A verification OTP has been sent to your email.',
-            email: email.toLowerCase(),
+            message: 'Registration successful. Your account is ready.',
+            email: cleanEmail,
             role,
-            verificationToken // Expose in response for seamless development testing
+            verificationToken
         });
     } catch (err) {
         console.error('Registration error:', err);
@@ -199,9 +223,12 @@ async function login(req, res) {
             return res.status(400).json({ error: 'Email and password are required.' });
         }
 
+        const cleanEmail = String(email).trim().toLowerCase();
+        const inputPassword = String(password);
+
         const result = await db.query(
             'SELECT * FROM users WHERE email = $1',
-            [email.toLowerCase()]
+            [cleanEmail]
         );
 
         if (result.rows.length === 0) {
@@ -224,15 +251,10 @@ async function login(req, res) {
             }
         }
 
-        // Verify role match if specified
-        if (requestedRole && user.role !== requestedRole) {
-            return res.status(403).json({
-                error: `Account is registered as "${user.role}", but you selected "${requestedRole}". Please switch to the correct role.`
-            });
-        }
+        // Verify password (matches exact or trimmed input)
+        const isMatch = await bcrypt.compare(inputPassword, user.password_hash) ||
+                        await bcrypt.compare(inputPassword.trim(), user.password_hash);
 
-        // Verify password
-        const isMatch = await bcrypt.compare(password, user.password_hash);
         if (!isMatch) {
             const newAttempts = (user.failed_attempts || 0) + 1;
             if (newAttempts >= 5) {
@@ -258,17 +280,13 @@ async function login(req, res) {
         // Reset failed attempts on success
         await db.query('UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = $1', [user.id]);
 
-        // Check verification
+        // Auto-verify user if currently unverified
         if (user.is_verified !== 1) {
-            return res.status(403).json({
-                error: 'Your email is not verified yet. Please check your inbox or enter your verification code.',
-                unverified: true,
-                email: user.email,
-                verificationToken: user.verification_token
-            });
+            await db.query('UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = $1', [user.id]);
+            user.is_verified = 1;
         }
 
-        // Generate tokens
+        // Generate tokens using actual registered user role
         const { accessToken, refreshToken } = generateTokens(user, rememberMe);
 
         // Set refresh token as HTTP-only cookie

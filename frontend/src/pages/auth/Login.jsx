@@ -34,7 +34,8 @@ export const Login = () => {
     setLoading(true);
 
     try {
-      const user = await login(email, password, role, rememberMe);
+      const cleanEmail = email.trim();
+      const user = await login(cleanEmail, password, role, rememberMe);
       // Redirect based on role
       switch (user.role) {
         case 'Student':
