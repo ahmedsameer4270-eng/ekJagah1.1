@@ -109,33 +109,33 @@ export const ResumeBuilder = () => {
       setLoading(true);
       setError('');
       const res = await api.get('/student/resume-data');
-      const d = res.data.resumeData || res.data.resume;
+      const d = res.data?.resumeData || res.data?.resume || res.data || {};
 
-      const pInfo = d.personalInfo || {};
+      const pInfo = d?.personalInfo || {};
       setPersonalInfo({
-        fullName: pInfo.fullName || '',
+        fullName: pInfo.fullName || pInfo.full_name || '',
         email: pInfo.email || '',
         phone: pInfo.phone || '',
         location: pInfo.location || '',
         college: pInfo.college || '',
         branch: pInfo.branch || '',
         cgpa: pInfo.cgpa || '',
-        graduationYear: pInfo.graduationYear || '',
-        targetCareerRole: pInfo.targetCareerRole || 'Software Engineer',
-        portfolioUrl: pInfo.portfolioUrl || '',
-        githubUrl: pInfo.githubUrl || '',
-        linkedinUrl: pInfo.linkedinUrl || '',
-        leetcodeUrl: pInfo.leetcodeUrl || '',
-        twitterUrl: pInfo.twitterUrl || '',
-        resumeUrl: pInfo.resumeUrl || ''
+        graduationYear: pInfo.graduationYear || pInfo.graduation_year || '',
+        targetCareerRole: pInfo.targetCareerRole || pInfo.target_career_role || 'Software Engineer',
+        portfolioUrl: pInfo.portfolioUrl || pInfo.portfolio_url || '',
+        githubUrl: pInfo.githubUrl || pInfo.github_url || '',
+        linkedinUrl: pInfo.linkedinUrl || pInfo.linkedin_url || '',
+        leetcodeUrl: pInfo.leetcodeUrl || pInfo.leetcode_url || '',
+        twitterUrl: pInfo.twitterUrl || pInfo.twitter_url || '',
+        resumeUrl: pInfo.resumeUrl || pInfo.resume_url || ''
       });
 
       setSummary(d.summary || '');
-      setTechnicalSkills(d.technicalSkills || []);
-      setSoftSkills(d.softSkills || []);
-      setVerifiedSkills(d.verifiedSkills || []);
+      setTechnicalSkills(d.technicalSkills || d.technical_skills || []);
+      setSoftSkills(d.softSkills || d.soft_skills || []);
+      setVerifiedSkills(d.verifiedSkills || d.verified_skills || []);
       setCertificates(d.certificates || []);
-      setCompletedCourses(d.completedCourses || []);
+      setCompletedCourses(d.completedCourses || d.courses || []);
 
       // Format projects
       const initialProjects = (d.projects || []).map((p) => ({
@@ -160,27 +160,28 @@ export const ResumeBuilder = () => {
 
       setExperience(d.experience || []);
 
-      if (d.resumeSettings) {
-        setTemplate(d.resumeSettings.template || 'modern');
-        setAccentColor(d.resumeSettings.accentColor || '#4f46e5');
-        setShowVerifiedBadges(d.resumeSettings.showVerifiedBadges ?? true);
-        setShowCertificates(d.resumeSettings.showCertificates ?? true);
-        setShowCourses(d.resumeSettings.showCourses ?? true);
-        setShowProjects(d.resumeSettings.showProjects ?? true);
-        setShowExperience(d.resumeSettings.showExperience ?? true);
-        if (d.resumeSettings.showPhone !== undefined) setShowPhone(d.resumeSettings.showPhone);
-        if (d.resumeSettings.showLocation !== undefined) setShowLocation(d.resumeSettings.showLocation);
-        if (d.resumeSettings.showGithub !== undefined) setShowGithub(d.resumeSettings.showGithub);
-        if (d.resumeSettings.showLinkedin !== undefined) setShowLinkedin(d.resumeSettings.showLinkedin);
-        if (d.resumeSettings.showPortfolio !== undefined) setShowPortfolio(d.resumeSettings.showPortfolio);
-        if (d.resumeSettings.showLeetcode !== undefined) setShowLeetcode(d.resumeSettings.showLeetcode);
-        if (d.resumeSettings.showTwitter !== undefined) setShowTwitter(d.resumeSettings.showTwitter);
+      const rSettings = d.resumeSettings || {};
+      if (rSettings) {
+        setTemplate(rSettings.template || 'modern');
+        setAccentColor(rSettings.accentColor || '#4f46e5');
+        setShowVerifiedBadges(rSettings.showVerifiedBadges ?? true);
+        setShowCertificates(rSettings.showCertificates ?? true);
+        setShowCourses(rSettings.showCourses ?? true);
+        setShowProjects(rSettings.showProjects ?? true);
+        setShowExperience(rSettings.showExperience ?? true);
+        if (rSettings.showPhone !== undefined) setShowPhone(rSettings.showPhone);
+        if (rSettings.showLocation !== undefined) setShowLocation(rSettings.showLocation);
+        if (rSettings.showGithub !== undefined) setShowGithub(rSettings.showGithub);
+        if (rSettings.showLinkedin !== undefined) setShowLinkedin(rSettings.showLinkedin);
+        if (rSettings.showPortfolio !== undefined) setShowPortfolio(rSettings.showPortfolio);
+        if (rSettings.showLeetcode !== undefined) setShowLeetcode(rSettings.showLeetcode);
+        if (rSettings.showTwitter !== undefined) setShowTwitter(rSettings.showTwitter);
       }
 
       setIsActiveResume(pInfo.resumeUrl === '/student/resume');
     } catch (err) {
       console.error('Failed to load resume data:', err);
-      setError('Failed to load resume data.');
+      setError(err.response?.data?.error || err.message || 'Failed to load resume data.');
     } finally {
       setLoading(false);
     }
@@ -478,9 +479,17 @@ export const ResumeBuilder = () => {
       )}
 
       {error && (
-        <div className="print:hidden p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs font-bold flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-rose-600" />
-          <span>{error}</span>
+        <div className="print:hidden p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs font-bold flex items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+          <button
+            onClick={fetchResumeData}
+            className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs transition active:scale-95"
+          >
+            Retry
+          </button>
         </div>
       )}
 

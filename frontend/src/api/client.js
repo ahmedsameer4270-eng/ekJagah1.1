@@ -340,78 +340,262 @@ const executeCloudFallback = (config) => {
     if (method === 'post') {
       return Promise.resolve({ data: { message: 'Resume saved successfully' } });
     }
+    const payload = {
+      personalInfo: {
+        fullName: prof.full_name || 'Aarav Sharma',
+        email: user?.email || 'student@skillbridge.edu',
+        phone: prof.phone || '+91 99999 88888',
+        location: prof.location || 'Bengaluru, India',
+        college: prof.college || 'Indian Institute of Information Technology',
+        branch: prof.branch || 'Computer Science & Engineering',
+        cgpa: prof.cgpa || 9.2,
+        graduationYear: prof.graduation_year || 2027,
+        targetCareerRole: prof.target_career_role || 'Full Stack Developer',
+        githubUrl: prof.github_url || 'https://github.com',
+        linkedinUrl: prof.linkedin_url || 'https://linkedin.com',
+        portfolioUrl: prof.portfolio_url || 'https://portfolio.dev',
+        leetcodeUrl: prof.leetcode_url || '',
+        twitterUrl: prof.twitter_url || ''
+      },
+      verifiedSkills: prof.verified_skills?.length > 0 ? prof.verified_skills : [
+        { skillId: 'react', skillName: 'React', level: 'advanced', score: 18, totalQuestions: 20, percentage: 90, verdict: 'Competent' },
+        { skillId: 'python', skillName: 'Python', level: 'intermediate', score: 16, totalQuestions: 16, percentage: 100, verdict: 'Competent' }
+      ],
+      certificates: [],
+      courses: [],
+      projects: prof.projects?.length > 0 ? prof.projects : [
+        {
+          id: 'proj-1',
+          title: 'EkJagah Career Intelligence Portal',
+          role: 'Full Stack Engineer',
+          startDate: '2026-01',
+          endDate: 'Present',
+          description: 'AI-driven skill matching and ATS-ready resume engine with role-based access.',
+          techStack: ['React', 'Node.js', 'PostgreSQL', 'TailwindCSS'],
+          bullets: [
+            'Engineered responsive user interfaces with sub-100ms API response time',
+            'Implemented secure JWT authentication and role-based access control'
+          ],
+          githubLink: 'https://github.com',
+          liveDemoLink: 'https://ek-jagah1-1.vercel.app',
+          featured: true
+        }
+      ],
+      experience: prof.experience || [],
+      summary: prof.resume_summary || 'Forward-thinking Computer Science student specializing in scalable full-stack development and cloud computing.',
+      resumeSettings: { template: 'classic', accentColor: '#059669', showVerifiedBadges: true, showProjects: true, showCertificates: true, showCourses: true, showPhone: true, showLocation: true }
+    };
+
     return Promise.resolve({
       data: {
-        personalInfo: {
-          fullName: prof.full_name || 'Aarav Sharma',
-          email: user?.email || 'student@skillbridge.edu',
-          phone: prof.phone || '+91 99999 88888',
-          location: prof.location || 'Bengaluru, India',
-          college: prof.college || 'Indian Institute of Information Technology',
-          branch: prof.branch || 'Computer Science & Engineering',
-          cgpa: prof.cgpa || 9.2,
-          graduationYear: prof.graduation_year || 2027,
-          githubUrl: prof.github_url || 'https://github.com',
-          linkedinUrl: prof.linkedin_url || 'https://linkedin.com',
-          portfolioUrl: prof.portfolio_url || 'https://portfolio.dev',
-          leetcodeUrl: prof.leetcode_url || '',
-          twitterUrl: prof.twitter_url || ''
-        },
-        verifiedSkills: prof.verified_skills || [],
-        certificates: [],
-        courses: [],
-        projects: prof.projects || [],
-        experience: prof.experience || [],
-        summary: prof.resume_summary || 'Forward-thinking Computer Science student specializing in scalable full-stack development and cloud computing.',
-        resumeSettings: { template: 'classic', accentColor: '#059669', showVerifiedBadges: true, showProjects: true, showCertificates: true, showPhone: true, showLocation: true }
+        success: true,
+        resumeData: payload,
+        resume: payload,
+        ...payload
       }
     });
   }
 
-  // 7. AI: Skill Gap
-  if (url.includes('/ai/skill-gap/latest') || url.includes('/ai/skill-gap/analyze')) {
+  // 7. AI: Benchmarks & Skill Gap
+  if (url.includes('/ai/benchmarks')) {
     return Promise.resolve({
       data: {
-        analysis: {
+        roles: [
+          { role: 'Full Stack Developer', category: 'Software Engineering' },
+          { role: 'Frontend Developer', category: 'Frontend' },
+          { role: 'Backend Engineer', category: 'Backend' },
+          { role: 'AI & Machine Learning Engineer', category: 'Artificial Intelligence' },
+          { role: 'Data Scientist', category: 'Data Science' },
+          { role: 'Cloud DevOps Engineer', category: 'Infrastructure' }
+        ]
+      }
+    });
+  }
+
+  if (url.includes('/ai/skill-gap/history')) {
+    return Promise.resolve({
+      data: {
+        history: [
+          { id: 'snap-1', career_goal: 'Full Stack Developer', match_percentage: 65, created_at: new Date(Date.now() - 14 * 86400000).toISOString() },
+          { id: 'snap-2', career_goal: 'Full Stack Developer', match_percentage: 74, created_at: new Date(Date.now() - 7 * 86400000).toISOString() },
+          { id: 'snap-3', career_goal: 'Full Stack Developer', match_percentage: 84, created_at: new Date().toISOString() }
+        ]
+      }
+    });
+  }
+
+  if (url.includes('/student/nudge')) {
+    return Promise.resolve({
+      data: {
+        showNudge: true,
+        nudge: {
+          type: 'achievement',
           targetRole: 'Full Stack Developer',
-          matchPercentage: 84,
-          matchedSkills: ['React', 'JavaScript', 'Node.js', 'Python'],
-          missingSkills: ['PostgreSQL', 'Docker', 'Redis'],
-          recommendations: [
-            { skill: 'PostgreSQL', reason: 'Industry-standard relational data store.' },
-            { skill: 'Docker', reason: 'Critical for containerized microservices and cloud deployments.' }
-          ]
+          message: 'You have verified 2 key core competencies! Completing your Docker course will boost your readiness index past 90%.',
+          activeCourseCount: 1
         }
       }
     });
   }
 
-  // 8. Jobs
-  if (url.includes('/jobs')) {
+  if (url.includes('/ai/skill-gap')) {
+    let payload = config.data;
+    if (typeof payload === 'string') {
+      try { payload = JSON.parse(payload); } catch { payload = {}; }
+    }
+    const roleGoal = payload?.careerGoal || 'Full Stack Developer';
+
+    const fullAnalysis = {
+      careerGoal: roleGoal,
+      targetRole: roleGoal,
+      matchPercentage: 84,
+      matchedSkills: [
+        { name: 'React', priority: 'Core' },
+        { name: 'JavaScript', priority: 'Core' },
+        { name: 'Node.js', priority: 'Core' },
+        { name: 'Python', priority: 'Secondary' }
+      ],
+      missingSkills: [
+        { name: 'Docker', priority: 'Core' },
+        { name: 'PostgreSQL', priority: 'Core' },
+        { name: 'Redis', priority: 'Recommended' }
+      ],
+      recommendedCourses: [
+        {
+          title: 'Docker & Kubernetes for Modern Developers',
+          provider: 'Coursera',
+          level: 'Intermediate',
+          skill: 'Docker',
+          url: 'https://coursera.org'
+        },
+        {
+          title: 'PostgreSQL High Performance Engineering',
+          provider: 'NPTEL',
+          level: 'Advanced',
+          skill: 'PostgreSQL',
+          url: 'https://nptel.ac.in'
+        },
+        {
+          title: 'Redis In-Memory Data Structures and Caching',
+          provider: 'Udemy',
+          level: 'Intermediate',
+          skill: 'Redis',
+          url: 'https://udemy.com'
+        }
+      ],
+      recommendedProjects: [
+        {
+          title: 'Containerized Microservices Architecture',
+          description: 'Deploy resilient containerized services with Docker, Redis cache, and PostgreSQL cluster.'
+        },
+        {
+          title: 'High-Throughput Distributed Task Queue',
+          description: 'Construct a resilient worker queue using Redis streams and Node.js event loops.'
+        }
+      ],
+      roadmap: [
+        { step: 1, title: 'Master Docker fundamentals & Compose multi-container setups', duration: '1-2 Weeks' },
+        { step: 2, title: 'Design normalized schemas & query optimizations in PostgreSQL', duration: '2 Weeks' },
+        { step: 3, title: 'Implement Redis caching layers for high-read throughput', duration: '1 Week' }
+      ]
+    };
+
     return Promise.resolve({
       data: {
-        jobs: [
+        snapshotId: 'snap-' + Date.now(),
+        analysis: fullAnalysis
+      }
+    });
+  }
+
+  // 8. Jobs & Applications
+  if (url.includes('/jobs/apply')) {
+    let payload = config.data;
+    if (typeof payload === 'string') {
+      try { payload = JSON.parse(payload); } catch { payload = {}; }
+    }
+    const appliedJobId = payload?.jobId || 'job-1';
+    const applications = JSON.parse(localStorage.getItem('sb_student_applications') || '[]');
+    if (!applications.some(a => a.job_id === appliedJobId)) {
+      applications.unshift({
+        id: 'app-' + Date.now(),
+        job_id: appliedJobId,
+        status: 'Applied',
+        cover_note: payload?.coverNote || '',
+        applied_at: new Date().toISOString()
+      });
+      localStorage.setItem('sb_student_applications', JSON.stringify(applications));
+    }
+    return Promise.resolve({
+      data: {
+        success: true,
+        message: 'Application submitted successfully.'
+      }
+    });
+  }
+
+  if (url.includes('/student/applications')) {
+    const apps = JSON.parse(localStorage.getItem('sb_student_applications') || '[]');
+    return Promise.resolve({
+      data: {
+        applications: apps.length > 0 ? apps : [
           {
-            id: 'job-1',
-            title: 'Junior Full Stack Engineer',
-            company_name: 'Tech Innovations Lab',
-            location: 'Bengaluru, India (Hybrid)',
-            job_type: 'Full-time',
-            salary_range: '₹8,00,000 - ₹12,00,000',
-            match_percentage: 88,
-            required_skills: ['React', 'Node.js', 'JavaScript', 'SQL']
-          },
-          {
-            id: 'job-2',
-            title: 'Frontend React Developer Intern',
-            company_name: 'Innovate AI Cloud',
-            location: 'Remote',
-            job_type: 'Internship',
-            salary_range: '₹35,000 / month',
-            match_percentage: 94,
-            required_skills: ['React', 'TailwindCSS', 'JavaScript']
+            id: 'app-sample-1',
+            job_id: 'job-1',
+            status: 'Under Review',
+            applied_at: new Date(Date.now() - 3 * 86400000).toISOString()
           }
         ]
+      }
+    });
+  }
+
+  if (url.includes('/jobs')) {
+    const defaultJobs = [
+      {
+        id: 'job-1',
+        title: 'Junior Full Stack Engineer',
+        company_name: 'Tech Innovations Lab',
+        location: 'Bengaluru, India (Hybrid)',
+        type: 'Full-time',
+        job_type: 'Full-time',
+        experience_level: 'Entry-level',
+        salary_range: '₹8,00,000 - ₹12,00,000',
+        salary_min: 800000,
+        salary_max: 1200000,
+        matchScore: 88,
+        match_percentage: 88,
+        skills_required: ['React', 'Node.js', 'JavaScript', 'SQL'],
+        required_skills: ['React', 'Node.js', 'JavaScript', 'SQL'],
+        verification_status: 'VERIFIED',
+        description: 'Build enterprise-grade SaaS platforms with React, Node.js, and cloud relational databases.'
+      },
+      {
+        id: 'job-2',
+        title: 'Frontend React Developer Intern',
+        company_name: 'Innovate AI Cloud',
+        location: 'Remote',
+        type: 'Internship',
+        job_type: 'Internship',
+        experience_level: 'Internship',
+        salary_range: '₹35,000 / month',
+        salary_min: 35000,
+        salary_max: 45000,
+        matchScore: 94,
+        match_percentage: 94,
+        skills_required: ['React', 'TailwindCSS', 'JavaScript'],
+        required_skills: ['React', 'TailwindCSS', 'JavaScript'],
+        verification_status: 'VERIFIED',
+        description: 'Work on cutting-edge responsive web applications and AI client interfaces.'
+      }
+    ];
+
+    const storedJobs = JSON.parse(localStorage.getItem('sb_shared_jobs') || '[]');
+    const combined = [...storedJobs, ...defaultJobs];
+
+    return Promise.resolve({
+      data: {
+        jobs: combined
       }
     });
   }

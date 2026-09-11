@@ -146,26 +146,26 @@ export const StudentCertificates = () => {
                 <div className="flex items-center justify-between gap-2 pb-4 border-b border-slate-100">
                   <span
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
-                      cert.status === 'VALID'
+                      cert.status === 'VALID' || cert.status === 'VERIFIED'
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : cert.status === 'UNDER_REVIEW'
-                        ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                        : 'bg-rose-50 text-rose-700 border border-rose-200'
+                        : cert.status === 'REJECTED'
+                        ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                        : 'bg-amber-50 text-amber-800 border border-amber-200'
                     }`}
                   >
-                    {cert.status === 'VALID' ? (
+                    {cert.status === 'VALID' || cert.status === 'VERIFIED' ? (
                       <ShieldCheck className="w-3.5 h-3.5" />
-                    ) : cert.status === 'UNDER_REVIEW' ? (
-                      <AlertTriangle className="w-3.5 h-3.5" />
-                    ) : (
+                    ) : cert.status === 'REJECTED' ? (
                       <XCircle className="w-3.5 h-3.5" />
+                    ) : (
+                      <AlertTriangle className="w-3.5 h-3.5" />
                     )}
                     <span>
-                      {cert.status === 'VALID'
+                      {cert.status === 'VALID' || cert.status === 'VERIFIED'
                         ? 'VERIFIED'
-                        : cert.status === 'UNDER_REVIEW'
-                        ? 'UNDER REVIEW'
-                        : 'REJECTED'}
+                        : cert.status === 'REJECTED'
+                        ? 'REJECTED'
+                        : 'UNDER REVIEW'}
                     </span>
                   </span>
 

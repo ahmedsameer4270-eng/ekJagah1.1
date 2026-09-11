@@ -39,7 +39,7 @@ export const Sidebar = () => {
           { name: 'Jobs & Internships', to: '/student/jobs', icon: Briefcase },
           { name: 'Courses', to: '/student/courses', icon: BookOpen },
           { name: 'Certificates', to: '/student/certificates', icon: Award },
-          { name: 'Profile', to: '/student/profile', icon: User },
+          { name: 'Profile & Portfolio', to: '/student/profile', icon: User },
         ];
       case 'Company':
         return [

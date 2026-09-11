@@ -6,6 +6,7 @@ import { NotificationProvider } from './context/NotificationContext';
 import { Navbar } from './components/common/Navbar';
 import { Sidebar } from './components/common/Sidebar';
 import { ProtectedRoute } from './components/guard/ProtectedRoute';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 // Public pages
 import { LandingPage } from './pages/LandingPage';
@@ -69,7 +70,9 @@ const AppLayout = ({ children }) => {
       <div className="flex flex-1">
         {isWorkspace && <Sidebar />}
         <main className={`flex-1 ${isWorkspace ? 'p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full' : ''}`}>
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </main>
       </div>
     </div>
@@ -93,6 +96,7 @@ export function App() {
               <Route path="/verify-cert/:certId" element={<CertificateVerifyPage />} />
               <Route path="/courses" element={<StudentCourses />} />
               <Route path="/jobs" element={<StudentJobs />} />
+              <Route path="/portfolio" element={<Navigate to="/student/portfolio" replace />} />
               <Route path="/unauthorized" element={<Forbidden />} />
 
               {/* Student Portal Routes */}
@@ -106,6 +110,14 @@ export function App() {
               />
               <Route
                 path="/student/profile"
+                element={
+                  <ProtectedRoute allowedRoles={['Student']}>
+                    <StudentProfile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/student/portfolio"
                 element={
                   <ProtectedRoute allowedRoles={['Student']}>
                     <StudentProfile />

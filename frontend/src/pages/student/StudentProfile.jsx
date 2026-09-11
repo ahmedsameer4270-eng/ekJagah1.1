@@ -91,8 +91,9 @@ export const StudentProfile = () => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
+        setError('');
         const res = await api.get('/student/profile');
-        const p = res.data.profile;
+        const p = res.data?.profile || res.data?.user?.profile || res.data || {};
         setFullName(p.full_name || '');
         setCollege(p.college || '');
         setBranch(p.branch || '');
@@ -108,12 +109,20 @@ export const StudentProfile = () => {
         setTwitterUrl(p.twitter_url || '');
         setResumeUrl(p.resume_url || '');
         setCompletion(p.profile_completion || 30);
-        setTechnicalSkills(p.technical_skills || []);
-        setVerifiedSkills(p.verified_skills || []);
-        setSoftSkills(p.soft_skills || []);
-        setProjects(p.projects || []);
+
+        const rawSkills = Array.isArray(p.technical_skills) ? p.technical_skills : [];
+        const normalizedSkills = rawSkills.map(s => {
+          if (typeof s === 'string') return { name: s, level: 'Intermediate' };
+          return { name: s?.name || s?.skillName || '', level: s?.level || 'Intermediate' };
+        }).filter(s => Boolean(s.name));
+
+        setTechnicalSkills(normalizedSkills);
+        setVerifiedSkills(Array.isArray(p.verified_skills) ? p.verified_skills : []);
+        setSoftSkills(Array.isArray(p.soft_skills) ? p.soft_skills : []);
+        setProjects(Array.isArray(p.projects) ? p.projects : []);
       } catch (err) {
         console.error('Failed to load profile:', err);
+        setError(err.response?.data?.error || 'Failed to load profile information. Please check your connection.');
       } finally {
         setLoading(false);
       }
@@ -655,24 +664,28 @@ export const StudentProfile = () => {
             {technicalSkills.length === 0 ? (
               <p className="text-xs text-slate-400">No technical skills added yet. Add at least 3 skills to boost matching.</p>
             ) : (
-              technicalSkills.map((s) => (
-                <span
-                  key={s.name}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-800"
-                >
-                  <span>{s.name}</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white text-slate-500 border border-slate-200">
-                    {s.level}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTechnicalSkill(s.name)}
-                    className="text-slate-400 hover:text-rose-500 transition"
+              technicalSkills.map((s, idx) => {
+                const sName = typeof s === 'string' ? s : s?.name || '';
+                const sLevel = typeof s === 'string' ? 'Intermediate' : s?.level || 'Intermediate';
+                return (
+                  <span
+                    key={sName || idx}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-800"
                   >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </span>
-              ))
+                    <span>{sName}</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white text-slate-500 border border-slate-200">
+                      {sLevel}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTechnicalSkill(sName)}
+                      className="text-slate-400 hover:text-rose-500 transition"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </span>
+                );
+              })
             )}
           </div>
         </div>
