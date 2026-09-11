@@ -61,12 +61,37 @@ export const AuthProvider = ({ children }) => {
         const registeredUsers = JSON.parse(localStorage.getItem('sb_registered_users') || '[]');
         const existing = registeredUsers.find((u) => u.email === cleanEmail);
 
-        const fallbackUser = existing || {
-          id: 'usr-' + Date.now(),
-          email: cleanEmail || 'student@skillbridge.edu',
-          role: role || 'Student',
-          is_verified: 1,
-          profile: {
+        let roleProfile = {};
+        if (role === 'Company') {
+          roleProfile = {
+            user_id: 'usr-' + Date.now(),
+            company_name: 'Tech Innovations Lab',
+            industry: 'Software & AI Cloud Systems',
+            location: 'Bengaluru, Karnataka',
+            website: 'https://techinnovations.io',
+            verification_status: 'VERIFIED',
+            trust_score: 96,
+            about: 'Leading enterprise software engineering and AI cloud systems provider.',
+            jobs_posted: 4,
+            active_hires: 12
+          };
+        } else if (role === 'Academician') {
+          roleProfile = {
+            user_id: 'usr-' + Date.now(),
+            full_name: 'Prof. Ramesh Gupta',
+            institution: 'Indian Institute of Technology Bombay',
+            department: 'Computer Science & Engineering',
+            designation: 'Professor & Head of Academic Relations',
+            research_areas: ['Distributed Computing', 'Algorithms', 'AI Systems']
+          };
+        } else if (role === 'Admin') {
+          roleProfile = {
+            user_id: 'usr-' + Date.now(),
+            full_name: 'System Administrator',
+            department: 'SkillBridge Governance'
+          };
+        } else {
+          roleProfile = {
             user_id: 'usr-' + Date.now(),
             full_name: cleanEmail ? cleanEmail.split('@')[0].replace('.', ' ') : 'Aarav Sharma',
             college: 'Indian Institute of Information Technology',
@@ -86,7 +111,15 @@ export const AuthProvider = ({ children }) => {
             verified_skills: [],
             resume_summary: 'Computer Science undergraduate passionate about full-stack engineering and cloud software.',
             resume_settings: '{}'
-          }
+          };
+        }
+
+        const fallbackUser = existing || {
+          id: 'usr-' + Date.now(),
+          email: cleanEmail || (role === 'Company' ? 'recruiter@techcorp.com' : role === 'Academician' ? 'prof.gupta@iitb.ac.in' : 'student@skillbridge.edu'),
+          role: role || 'Student',
+          is_verified: 1,
+          profile: roleProfile
         };
 
         const fallbackToken = 'demo-token-' + Date.now();

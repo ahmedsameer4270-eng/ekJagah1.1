@@ -284,6 +284,7 @@ function computeJobMatch(studentSkills = [], jobSkills = []) {
 
 module.exports = {
     INDUSTRY_BENCHMARKS,
+    normalizeSkill,
     analyzeSkillGap,
     computeJobMatch
 };

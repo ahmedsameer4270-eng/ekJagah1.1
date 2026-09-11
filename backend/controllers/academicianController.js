@@ -27,13 +27,26 @@ async function getIndustryTrends(req, res) {
         const studentRes = await db.query('SELECT technical_skills FROM student_profiles');
         const skillCounts = {};
         studentRes.rows.forEach(r => {
-            const skills = JSON.parse(r.technical_skills || '[]');
-            skills.forEach(s => {
-                const name = typeof s === 'string' ? s : s.name;
-                if (name) {
-                    skillCounts[name] = (skillCounts[name] || 0) + 1;
+            let skills = [];
+            try {
+                if (Array.isArray(r.technical_skills)) {
+                    skills = r.technical_skills;
+                } else if (typeof r.technical_skills === 'string') {
+                    skills = JSON.parse(r.technical_skills || '[]');
+                } else if (r.technical_skills && typeof r.technical_skills === 'object') {
+                    skills = Object.values(r.technical_skills);
                 }
-            });
+            } catch (e) {
+                skills = [];
+            }
+            if (Array.isArray(skills)) {
+                skills.forEach(s => {
+                    const name = typeof s === 'string' ? s : s?.name;
+                    if (name) {
+                        skillCounts[name] = (skillCounts[name] || 0) + 1;
+                    }
+                });
+            }
         });
 
         return res.json({

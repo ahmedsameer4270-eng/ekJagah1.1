@@ -70,12 +70,32 @@ async function fetchUserProfile(userId, role) {
             }
         } else if (role === 'Company') {
             const res = await db.query('SELECT * FROM company_profiles WHERE user_id = $1', [userId]);
-            return res.rows[0] || null;
+            if (res.rows.length > 0) {
+                return res.rows[0];
+            } else {
+                await db.query(
+                    `INSERT INTO company_profiles (user_id, company_name, verification_status, trust_score)
+                     VALUES ($1, 'Tech Innovations Lab', 'VERIFIED', 95)`,
+                    [userId]
+                );
+                const newRes = await db.query('SELECT * FROM company_profiles WHERE user_id = $1', [userId]);
+                return newRes.rows[0] || null;
+            }
         } else if (role === 'Academician') {
             const res = await db.query('SELECT * FROM academician_profiles WHERE user_id = $1', [userId]);
             if (res.rows.length > 0) {
                 const profile = res.rows[0];
                 profile.research_areas = safeParse(profile.research_areas, []);
+                return profile;
+            } else {
+                await db.query(
+                    `INSERT INTO academician_profiles (user_id, full_name, institution, department)
+                     VALUES ($1, 'Faculty Member', 'University Institute of Technology', 'Computer Science & Engineering')`,
+                    [userId]
+                );
+                const newRes = await db.query('SELECT * FROM academician_profiles WHERE user_id = $1', [userId]);
+                const profile = newRes.rows[0] || null;
+                if (profile) profile.research_areas = [];
                 return profile;
             }
         }

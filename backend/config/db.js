@@ -1,5 +1,11 @@
 const { Pool } = require('pg');
-const Database = require('better-sqlite3');
+let Database = null;
+try {
+    Database = require('better-sqlite3');
+} catch (e) {
+    // Better-sqlite3 native C++ bindings not available (e.g. AWS Lambda / Vercel Serverless)
+    console.warn('⚠️ Native better-sqlite3 driver not available in this runtime.');
+}
 const path = require('path');
 const fs = require('fs');
 
@@ -12,13 +18,19 @@ const databaseUrl = process.env.DATABASE_URL;
 function initializeDatabase() {
     if (databaseUrl && !process.env.FORCE_SQLITE) {
         try {
-            pgPool = new Pool({
-                connectionString: databaseUrl,
-                ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-                connectionTimeoutMillis: 3000,
-            });
+            // Serverless connection pool caching pattern
+            if (!global.__pgPool) {
+                global.__pgPool = new Pool({
+                    connectionString: databaseUrl,
+                    ssl: { rejectUnauthorized: false }, // Compatible with Supabase, Neon, AWS RDS in production
+                    connectionTimeoutMillis: 5000,
+                    max: process.env.VERCEL ? 1 : 10, // Prevent connection exhaustion in serverless lambdas
+                    idleTimeoutMillis: 30000,
+                });
+                console.log('✅ Connected to PostgreSQL database pool.');
+            }
+            pgPool = global.__pgPool;
             activeEngine = 'postgres';
-            console.log('✅ Connected to PostgreSQL database.');
         } catch (err) {
             console.warn('⚠️ PostgreSQL connection failed, switching to embedded SQLite:', err.message);
             initSqlite();
@@ -29,6 +41,10 @@ function initializeDatabase() {
 }
 
 function initSqlite() {
+    if (!Database) {
+        console.warn('⚠️ SQLite engine unavailable. Please provide DATABASE_URL for PostgreSQL in serverless production.');
+        return;
+    }
     const dbPath = path.join(__dirname, '../skillbridge.db');
     sqliteDb = new Database(dbPath);
     sqliteDb.pragma('journal_mode = WAL');
